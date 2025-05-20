@@ -1,6 +1,9 @@
 import '../css/style.css'
 import { Actor, Engine, Vector, DisplayMode } from "excalibur"
 import { Resources, ResourceLoader } from './resources.js'
+import { Background } from './background.js'
+import { Shooter } from './shooter.js'
+import { Zombie } from './zombie.js'
 
 export class Game extends Engine {
 
@@ -10,23 +13,33 @@ export class Game extends Engine {
             height: 720,
             maxFps: 60,
             displayMode: DisplayMode.FitScreen
-         })
-        this.start(ResourceLoader).then(() => this.startGame())
+        });
+
+        this.start(ResourceLoader).then(() => this.startGame());
     }
 
     startGame() {
-        console.log("start de game!")
-        const fish = new Actor()
-        fish.graphics.use(Resources.Fish.toSprite())
-        fish.pos = new Vector(500, 300)
-        fish.vel = new Vector(-10,0)
-        fish.events.on("exitviewport", (e) => this.fishLeft(e))
-        this.add(fish)
+        console.log("start de game!");
+
+        this.add(new Background());
+
+        const shooter = new Shooter(625, 300);
+        this.add(shooter);
+
+        const spawnZombieLoop = () => {
+            const zombie = new Zombie(shooter);
+            this.add(zombie); // use 'this', not 'engine'
+
+            const delay = 500 + Math.random() * 1500;
+            this.clock.schedule(() => spawnZombieLoop(), delay);
+        };
+
+        spawnZombieLoop();
     }
 
-    fishLeft(e) {
-        e.target.pos = new Vector(1350, 300)
+    shooterLeft(e) {
+        e.target.pos = new Vector(1350, 500);
     }
 }
 
-new Game()
+new Game();
