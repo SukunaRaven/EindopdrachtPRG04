@@ -1,14 +1,29 @@
-import { Actor, Vector, Keys } from 'excalibur';
+import { Actor, Vector, Keys, CollisionType, Shape } from 'excalibur';
 import { Resources } from './resources.js';
 import { Bullet } from './bullet.js';
+import { Zombie } from './zombie.js';
 
 export class Shooter extends Actor {
+  shoot () {
+    let bullet = new Bullet(this.pos.x, this.pos.y)
+    this.scene.add(bullet);
+  };
   constructor(x, y) {
     super({
       pos: new Vector(x, y),
-      width: 64,
-      height: 64
+      width: 300,
+      height: 300,
+      collisionType: CollisionType.Active,
     });
+
+    this.health = 200;
+    this.maxHealth = 200;
+
+    this.ammo = 30;      
+    this.totalAmmo = 200;
+    this.clipSize = 30;
+    this.reloadTime = 2000; 
+    this.isReloading = false;
 
     this._lastFacing = 0;
   }
@@ -17,16 +32,69 @@ export class Shooter extends Actor {
     this.graphics.use(Resources.Shooter.toSprite());
     this.scale = new Vector(0.25, 0.25);
 
+    this.collider.set(Shape.Box(this.width, this.height));
+
     engine.input.pointers.primary.on('down', (evt) => {
+      if (this.isReloading || this.ammo <= 0) {
+        if (!this.isReloading && this.totalAmmo > 0) {
+          this.reload(engine);
+        }
+        return;
+      }
+
       const click = evt.worldPos;
       const dir = click.sub(this.pos);
+      const normalizedDir = dir.normalize();
 
-      const bullet = new Bullet(this.pos, dir);
-      this.scene.add(bullet);
+      const spawnOffset = normalizedDir.scale(this.width * this.scale.x / 2 + 10);
+      const bulletSpawnPos = this.pos.clone().add(spawnOffset);
+
+      const bullet = new Bullet(bulletSpawnPos, normalizedDir.scale(400));
+      engine.currentScene.add(bullet);
 
       this.rotation = Math.atan2(dir.y, dir.x);
       this._lastFacing = this.rotation;
+
+      this.ammo--;
+      if (this.ammo <= 0) {
+        this.reload(engine);
+      }
+
+      this.on('collisionstart', (evt) => {
+  if (evt.other.owner instanceof Zombie) {
+    if (!this._isInvulnerable) {
+      this.health -= 10;
+      this._isInvulnerable = true;
+
+      setTimeout(() => {
+        this._isInvulnerable = false;
+      }, 1000);
+    }
+  }
+});
+
     });
+
+    engine.input.keyboard.on('press', (evt) => {
+      if (evt.key === Keys.R) {
+        if (!this.isReloading && this.ammo < this.clipSize && this.totalAmmo > 0) {
+          this.reload(engine);
+        }
+      }
+    });
+  }
+
+  reload() {
+    if (this.isReloading) return;
+    this.isReloading = true;
+
+    setTimeout(() => {
+      const needed = this.clipSize - this.ammo;
+      const ammoToLoad = Math.min(needed, this.totalAmmo);
+      this.ammo += ammoToLoad;
+      this.totalAmmo -= ammoToLoad;
+      this.isReloading = false;
+    }, this.reloadTime);
   }
 
   onPreUpdate(engine) {
@@ -35,10 +103,10 @@ export class Shooter extends Actor {
 
     const kb = engine.input.keyboard;
 
-    if (kb.isHeld(Keys.Left) || kb.isHeld(Keys.A)) xs = -175;
-    if (kb.isHeld(Keys.Right) || kb.isHeld(Keys.D)) xs = 175;
-    if (kb.isHeld(Keys.Up) || kb.isHeld(Keys.W)) ys = -175;
-    if (kb.isHeld(Keys.Down) || kb.isHeld(Keys.S)) ys = 175;
+    if (kb.isHeld(Keys.A)) xs = -175;
+    if (kb.isHeld(Keys.D)) xs = 175;
+    if (kb.isHeld(Keys.W)) ys = -175;
+    if (kb.isHeld(Keys.S)) ys = 175;
 
     this.vel = new Vector(xs, ys);
 

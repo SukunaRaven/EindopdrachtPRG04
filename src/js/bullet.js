@@ -1,16 +1,34 @@
-import { Actor, Vector, CollisionType, Color } from 'excalibur';
+import { Actor, Color, CollisionType, Shape } from 'excalibur';
+import { Zombie } from './zombie.js';
+
 
 export class Bullet extends Actor {
-  constructor(startPos, direction) {
+  damage = 50;
+
+  constructor(pos, velocity) {
     super({
-      pos: startPos.clone(),
-      radius: 4,
-      collisionType: CollisionType.Passive
+      pos,
+      width: 10,
+      height: 10,
+      color: Color.Yellow,
     });
 
-    this.vel = direction.normalize().scale(450);
-    this.color = Color.Yellow;
+    this.vel = velocity;
+  }
 
-    this.on('exitviewport', () => this.kill());
+  onInitialize() {
+    this.collider.set(Shape.Box(this.width, this.height));
+  }
+
+  update(engine, delta) {
+    super.update(engine, delta);
+
+    const { drawWidth, drawHeight } = engine;
+    if (
+      this.pos.x < 0 || this.pos.x > drawWidth ||
+      this.pos.y < 0 || this.pos.y > drawHeight
+    ) {
+      this.kill();
+    }
   }
 }

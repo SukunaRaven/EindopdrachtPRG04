@@ -1,21 +1,29 @@
-import { Actor, Vector } from 'excalibur';
+import { Actor, CollisionType, Vector, Shape } from 'excalibur';
 import { Resources } from './resources.js';
 import { Bullet } from './bullet.js';
 
+
+
 export class Zombie extends Actor {
-  constructor(shooter) {
+  constructor(shooter, scoreTracker = null) {
     super({
-      width: 64,
-      height: 64
+      width: 300,
+      height: 300,
+      collisionType: CollisionType.Passive,
     });
 
     this.shooter = shooter;
-    this.speed = 80 + Math.random() * 100; // 👈 Speed between 80 and 180
+    this.scoreTracker = scoreTracker;
+    this.speed = 80 + Math.random() * 100;
+
+    this.health = 100;
   }
 
   onInitialize() {
     this.graphics.use(Resources.Zombie.toSprite());
     this.scale = new Vector(0.25, 0.25);
+
+    this.collider.set(Shape.Box(this.width, this.height));
 
     this.on('postupdate', () => {
       const dir = this.shooter.pos.sub(this.pos).normalize();
@@ -23,10 +31,18 @@ export class Zombie extends Actor {
       this.rotation = Math.atan2(dir.y, dir.x);
     });
 
-    this.on('collisionstart', (evt) => {
-      if (evt.other instanceof Bullet) {
-        evt.other.kill();
-        this.kill();
+    this.on('collisionstart', (e) => {
+      if (e.other.owner instanceof Bullet) {
+        e.other.owner.kill();
+
+        this.health -= e.other.owner.damage;
+
+        if (this.health <= 0) {
+          this.kill();
+          if (this.scoreTracker) {
+            this.scoreTracker.score += 5;
+          }
+        }
       }
     });
 
