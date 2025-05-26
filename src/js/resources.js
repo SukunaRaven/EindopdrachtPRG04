@@ -5,8 +5,10 @@ const Resources = {
     Shooter: new ImageSource('images/shooter.png'),
     Zombie: new ImageSource('images/zombie.png'),
     Background: new ImageSource('images/background.avif'),
+    ShootSound : new Sound('/sounds/shooting.mp3'),
+    ZombieSound: new Sound('/sounds/zombie.mp3'),
+    Music      : new Sound('/sounds/backgroundmusic.mp3')
 }
-
 
 
 

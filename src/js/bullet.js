@@ -1,5 +1,4 @@
 import { Actor, Color, CollisionType, Shape } from 'excalibur';
-import { Zombie } from './zombie.js';
 
 
 export class Bullet extends Actor {

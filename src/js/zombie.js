@@ -2,9 +2,10 @@ import { Actor, CollisionType, Vector, Shape } from 'excalibur';
 import { Resources } from './resources.js';
 import { Bullet } from './bullet.js';
 
-
-
 export class Zombie extends Actor {
+  // Static variable to track number of active zombies
+  static activeZombiesCount = 0;
+
   constructor(shooter, scoreTracker = null) {
     super({
       width: 300,
@@ -15,7 +16,6 @@ export class Zombie extends Actor {
     this.shooter = shooter;
     this.scoreTracker = scoreTracker;
     this.speed = 80 + Math.random() * 100;
-
     this.health = 100;
   }
 
@@ -24,6 +24,10 @@ export class Zombie extends Actor {
     this.scale = new Vector(0.25, 0.25);
 
     this.collider.set(Shape.Box(this.width, this.height));
+
+    // Increase active zombie count when a zombie is created
+    Zombie.activeZombiesCount++;
+    this.updateZombieSound();
 
     this.on('postupdate', () => {
       const dir = this.shooter.pos.sub(this.pos).normalize();
@@ -48,7 +52,28 @@ export class Zombie extends Actor {
 
     this.on('exitviewport', () => this.kill());
 
+    // When the zombie is killed or removed, decrease count and update sound
+    this.on('postkill', () => {
+      Zombie.activeZombiesCount = Math.max(0, Zombie.activeZombiesCount - 1);
+      this.updateZombieSound();
+    });
+
     this.setSpawnPosition();
+  }
+
+  updateZombieSound() {
+    if (Zombie.activeZombiesCount > 0) {
+      if (!Resources.ZombieSound.isPlaying()) {
+        Resources.ZombieSound.volume = 0.2;
+        Resources.ZombieSound.loop = true;
+        Resources.ZombieSound.play();
+      } else {
+        Resources.ZombieSound.volume = 0.2;
+      }
+    } else {
+      Resources.ZombieSound.volume = 0;
+      Resources.ZombieSound.stop();
+    }
   }
 
   setSpawnPosition() {

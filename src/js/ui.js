@@ -1,14 +1,12 @@
 import { Actor, Label, Color, Font, FontUnit, Vector, ScreenElement, Rectangle } from 'excalibur';
-import { Resources } from './resources.js';
-import { Shooter } from './shooter.js';
-import { Zombie } from './zombie.js';
-import { Bullet } from './bullet.js';
+
 
 export class GameUI extends ScreenElement {
-  constructor(shooter, scoreTracker) {
+  constructor(shooter, scoreTracker, highScoreTracker) {
     super({ x: 0, y: 0, z: 100 });
     this.shooter = shooter;
     this.scoreTracker = scoreTracker;
+    this.highScoreTracker = highScoreTracker;
   }
 
   onInitialize(engine) {
@@ -25,8 +23,14 @@ export class GameUI extends ScreenElement {
       font: font
     });
 
+    this.highScoreLabel = new Label({
+      text: `High Score: ${this.highScoreTracker?.score ?? 0}`,
+      pos: new Vector(20, 45),
+      font: font
+    });
+
     this.healthBg = new Actor({
-      pos: new Vector(20, 50),
+      pos: new Vector(20, 75),
       anchor: Vector.Zero
     });
     this.healthBg.graphics.use(new Rectangle({
@@ -36,7 +40,7 @@ export class GameUI extends ScreenElement {
     }));
 
     this.healthBar = new Actor({
-      pos: new Vector(20, 50),
+      pos: new Vector(20, 75),
       anchor: Vector.Zero
     });
     this.healthBar.graphics.use(new Rectangle({
@@ -47,26 +51,30 @@ export class GameUI extends ScreenElement {
 
     this.ammoLabel = new Label({
       text: 'Ammo: 30/200',
-      pos: new Vector(20, 80),
+      pos: new Vector(20, 105),
       font: font
     });
 
     this.reloadLabel = new Label({
       text: '',
-      pos: new Vector(20, 110),
+      pos: new Vector(20, 135),
       font: font,
       color: Color.Red
     });
 
-    engine.add(this.healthBg);
-    engine.add(this.healthBar);
-    engine.add(this.scoreLabel);
-    engine.add(this.ammoLabel);
-    engine.add(this.reloadLabel);
+    this.addChild(this.healthBg);
+    this.addChild(this.healthBar);
+    this.addChild(this.scoreLabel);
+    this.addChild(this.highScoreLabel);
+    this.addChild(this.ammoLabel);
+    this.addChild(this.reloadLabel);
   }
 
   onPreUpdate() {
+    if (!this.scoreTracker || !this.highScoreTracker) return;
+
     this.scoreLabel.text = `Score: ${this.scoreTracker.score}`;
+    this.highScoreLabel.text = `High Score: ${this.highScoreTracker.score}`;
 
     const maxHealth = this.shooter.maxHealth || 100;
     const currentHealth = Math.max(this.shooter.health, 0);
@@ -80,7 +88,6 @@ export class GameUI extends ScreenElement {
     }));
 
     this.ammoLabel.text = `Ammo: ${this.shooter.ammo}/${this.shooter.totalAmmo}`;
-
     this.reloadLabel.text = this.shooter.isReloading ? 'Reloading...' : '';
   }
 }

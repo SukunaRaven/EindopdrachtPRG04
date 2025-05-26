@@ -52,6 +52,9 @@ export class Shooter extends Actor {
       const bullet = new Bullet(bulletSpawnPos, normalizedDir.scale(400));
       engine.currentScene.add(bullet);
 
+      Resources.ShootSound.volume = 0.1;
+      Resources.ShootSound.play();
+
       this.rotation = Math.atan2(dir.y, dir.x);
       this._lastFacing = this.rotation;
 
