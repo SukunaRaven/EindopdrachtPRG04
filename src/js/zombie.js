@@ -3,7 +3,6 @@ import { Resources } from './resources.js';
 import { Bullet } from './bullet.js';
 
 export class Zombie extends Actor {
-  // Static variable to track number of active zombies
   static activeZombiesCount = 0;
 
   constructor(shooter, scoreTracker = null) {
@@ -25,7 +24,6 @@ export class Zombie extends Actor {
 
     this.collider.set(Shape.Box(this.width, this.height));
 
-    // Increase active zombie count when a zombie is created
     Zombie.activeZombiesCount++;
     this.updateZombieSound();
 
@@ -52,7 +50,6 @@ export class Zombie extends Actor {
 
     this.on('exitviewport', () => this.kill());
 
-    // When the zombie is killed or removed, decrease count and update sound
     this.on('postkill', () => {
       Zombie.activeZombiesCount = Math.max(0, Zombie.activeZombiesCount - 1);
       this.updateZombieSound();
