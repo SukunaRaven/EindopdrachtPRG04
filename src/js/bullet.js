@@ -22,10 +22,10 @@ export class Bullet extends Actor {
   update(engine, delta) {
     super.update(engine, delta);
 
-    const { drawWidth, drawHeight } = engine;
+    const { worldWidth, worldHeight } = engine;
     if (
-      this.pos.x < 0 || this.pos.x > drawWidth ||
-      this.pos.y < 0 || this.pos.y > drawHeight
+      this.pos.x < 0 || this.pos.x > worldWidth ||
+      this.pos.y < 0 || this.pos.y > worldHeight
     ) {
       this.kill();
     }

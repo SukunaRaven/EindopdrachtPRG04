@@ -2,6 +2,8 @@ import { Actor, Vector, Keys, CollisionType, Shape } from 'excalibur';
 import { Resources } from './resources.js';
 import { Bullet } from './bullet.js';
 import { Zombie } from './zombie.js';
+import { AmmoPack } from './ammopack.js';
+
 
 export class Shooter extends Actor {
   shoot () {
@@ -52,6 +54,8 @@ export class Shooter extends Actor {
       const bullet = new Bullet(bulletSpawnPos, normalizedDir.scale(400));
       engine.currentScene.add(bullet);
 
+      engine.currentScene.camera.shake(3,3,100);
+
       Resources.ShootSound.volume = 0.1;
       Resources.ShootSound.play();
 
@@ -63,20 +67,25 @@ export class Shooter extends Actor {
         this.reload(engine);
       }
 
-      this.on('collisionstart', (evt) => {
-  if (evt.other.owner instanceof Zombie) {
-    if (!this._isInvulnerable) {
-      this.health -= 10;
-      this._isInvulnerable = true;
-
-      setTimeout(() => {
-        this._isInvulnerable = false;
-      }, 1000);
-    }
-  }
-});
-
     });
+
+    this.on('collisionstart', (evt) => {
+        if (evt.other.owner instanceof AmmoPack) {
+        this.totalAmmo += evt.other.owner.ammoPickUp;
+        evt.other.owner.kill();
+       }
+         else if (evt.other.owner instanceof Zombie) {
+          if (!this._isInvulnerable) {
+            this.health -= 10;
+            this._isInvulnerable = true;
+            setTimeout(() => {
+              this._isInvulnerable = false;
+            }, 1000);
+          }
+        }
+
+
+      });
 
     engine.input.keyboard.on('press', (evt) => {
       if (evt.key === Keys.R) {
@@ -118,12 +127,13 @@ export class Shooter extends Actor {
     }
     this.rotation = this._lastFacing;
 
-    const drawWidth = engine.drawWidth;
-    const drawHeight = engine.drawHeight;
-    const hw = this.width / 2;
-    const hh = this.height / 2;
+    const worldWidth = 2000;
+const worldHeight = 1200;
+const hw = this.width * this.scale.x / 2;
+const hh = this.height * this.scale.y / 2;
 
-    this.pos.x = Math.max(hw, Math.min(this.pos.x, drawWidth - hw));
-    this.pos.y = Math.max(hh, Math.min(this.pos.y, drawHeight - hh));
+this.pos.x = Math.max(hw, Math.min(this.pos.x, worldWidth - hw));
+this.pos.y = Math.max(hh, Math.min(this.pos.y, worldHeight - hh));
+
   }
 }

@@ -5,6 +5,8 @@ import { Background } from './background.js';
 import { Shooter } from './shooter.js';
 import { Zombie } from './zombie.js';
 import { GameUI } from './ui.js';
+import { AmmoPack } from './ammopack.js';
+
 
 export class Game extends Engine {
   constructor() {
@@ -34,9 +36,9 @@ export class Game extends Engine {
     this.highScoreTracker = { score: this.highScore }; 
 
     this.shooter = new Shooter(625, 300);
-    this.shooter.health    = this.shooter.maxHealth || 200;
-    this.shooter.ammo      = this.shooter.clipSize  || 30;
-    this.shooter.totalAmmo = 200 - this.shooter.ammo;
+    this.shooter.health    = this.shooter.maxHealth
+    this.shooter.ammo      = this.shooter.clipSize
+    this.shooter.totalAmmo = this.shooter.totalAmmo - this.shooter.ammo;
 
     this.add(this.shooter);
 
@@ -58,20 +60,36 @@ export class Game extends Engine {
       Resources.Music.play();
     }
 
-    this.spawnZombieLoop = () => {
-      if (
-        this.shooter.health <= 0 ||
-        (this.shooter.ammo === 0 && this.shooter.totalAmmo === 0)
-      )
-        return;
+   this.spawnZombieLoop = () => {
+  if (
+    this.shooter.health <= 0 ||
+    (this.shooter.ammo === 0 && this.shooter.totalAmmo === 0)
+  )
+    return;
 
-      const zombie = new Zombie(this.shooter, this.scoreTracker);
-      this.add(zombie);
+  const zombie = new Zombie(this.shooter, this.scoreTracker);
+  this.add(zombie);
 
-      const delay = 500 + Math.random() * 1500;
-      this.clock.schedule(this.spawnZombieLoop, delay);
-    };
-    this.spawnZombieLoop();
+  const delay = 500 + Math.random() * 1500;
+  this.clock.schedule(this.spawnZombieLoop, delay);
+};
+this.spawnZombieLoop();
+
+this.spawnAmmoPackLoop = () => {
+  if (this.shooter.health <= 0) {
+    return;
+  }
+
+  const x = Math.random() * 2000;
+  const y = Math.random() * 1200;
+  const ammoPack = new AmmoPack(x, y);
+  this.add(ammoPack);
+
+  const delay = 5000 + Math.random() * 10000; // spawn every 5-15 seconds
+  this.clock.schedule(this.spawnAmmoPackLoop, delay);
+};
+
+this.spawnAmmoPackLoop();
 
     this.on('postupdate', () => {
       if (
